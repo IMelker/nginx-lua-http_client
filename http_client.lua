@@ -64,7 +64,7 @@ if ngx.worker.id() ~= nil then
             while ok do 
                 local http_input_key = "http_input"
                 local encoded_http_input, error = R:blpop(http_input_key, 60)
-                if encoded_http_input ~= ngx.null then
+                if encoded_http_input ~= nil and encoded_http_input[2] ~= nil then
                     local http_query = DecodeDictonary(encoded_http_input[2])
                     
                     ngx.log(ngx.INFO, http_query["method"])

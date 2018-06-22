@@ -31,7 +31,7 @@ end
 --------------------------------------------------------------------------------
 local redis = require "redis"
 
-local R = redis:connect("unix:/var/run/redis/redis.sock")
+local R = redis.connect('unix:/var/run/redis/redis.sock')
 if not R then
     print("Failed to connect to Redis. ")
     return
