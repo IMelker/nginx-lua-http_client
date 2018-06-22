@@ -40,10 +40,7 @@ end
 local http_input_key = "http_input"
 local http_query = { }
 http_query["method"] = 'GET'
-http_query["host"] = '188.94.228.58'
-http_query["port"] = '80'
-http_query["path"] = 'get'
-http_query["query"] = ''
+http_query["url"] = 'http://188.94.228.58:80/get'
 http_query["headers"] = ''
 http_query["body"] = ''
 local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
@@ -54,10 +51,7 @@ if encoded_http_output ~= nil then
     local http_query = DecodeDictonary(encoded_http_output[2])
     print("--------------------")
     print(http_query["method"])
-    print(http_query["host"]) 
-    print(http_query["port"])
-    print(http_query["path"])
-    print(http_query["query"])
+    print(http_query["url"]) 
     print(http_query["headers"])
     print(http_query["body"])
     print("")
