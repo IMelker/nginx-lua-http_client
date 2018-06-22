@@ -51,9 +51,8 @@ if ngx.worker.id() ~= nil then
     check = function(premature)
         if not premature then
             local redis = require "resty.redis"
-            local http = require "resty.http"
+            local http = require "resty.http.simple"
             local R = redis:new()
-            local httpc = http.new()
             
             local ok, error = R:connect("unix:/var/run/redis/redis.sock")
             if not ok then
@@ -67,36 +66,41 @@ if ngx.worker.id() ~= nil then
                 if encoded_http_input ~= nil and encoded_http_input[2] ~= nil then
                     local http_query = DecodeDictonary(encoded_http_input[2])
                     
-                    ngx.log(ngx.INFO, http_query["method"])
-                    ngx.log(ngx.INFO, http_query["uri"])
-                    ngx.log(ngx.INFO, http_query["headers"])
-                    ngx.log(ngx.INFO, http_query["body"])
+                    ngx.log(ngx.INFO, "[METHOD] = ", http_query["method"])
+                    ngx.log(ngx.INFO, "[HOST] = ", http_query["host"])
+		    ngx.log(ngx.INFO, "[PORT] = ", http_query["port"])
+		    ngx.log(ngx.INFO, "[PATH] = ", http_query["path"])
+		    ngx.log(ngx.INFO, "[QUERY] = ", http_query["query"])
+                    ngx.log(ngx.INFO, "[HEADERS] = ", http_query["headers"])
+                    ngx.log(ngx.INFO, "[BODY] = ",  http_query["body"])
                     
-                    local httpc_res, httpc_error = httpc:request_uri(http_query["uri"], {
+                    local httpc_res, httpc_error = http.request(http_query["host"], tonumber(http_query["port"]), {
                         method = http_query["method"],
+			path = http_query["path"],
+			query = http_query["query"],
                         body = http_query["body"],
                         headers = http_query["headers"]:ToHeadersTable()
                     })
 
                     if not httpc_res then
-                        ngx.say("failed to request: ", httpc_error)
+                        ngx.log(ngx.INFO, "Failed to request: ", httpc_error)
                         return
                     end
                     
                     ngx.log(ngx.INFO, httpc_res.status)
-                    ngx.log(ngx.INFO, httpc_res.headers:ToHeadersString())
-                    ngx.log(ngx.INFO, httpc_res:read_body())
+                    --ngx.log(ngx.INFO, httpc_res.headers:ToHeadersString())
+                    ngx.log(ngx.INFO, httpc_res.body)
                     
                     local http_output_key = "http_output"
                     http_query["res_status"] = httpc_res.status
-                    http_query["res_headers"] = httpc_res.headers:ToHeadersString()
-                    http_query["res_body"] = httpc_res:read_body()
+                    http_query["res_headers"] = "" --httpc_res.headers:ToHeadersString()
+                    http_query["res_body"] = httpc_res.body
                     local res_redis_res, res_redis_err = R:lpush(http_output_key, EncodeDictonary(http_query))
                     if (not res_redis_res) then
                         ngx.log(ngx.ERR, "Failed to write down response data to redis: ", res_redis_err)
                     end
                 end
-                httpc:set_keepalive(60000, 1024)
+              
                 R:set_keepalive(10000, 1024)
             end 
 

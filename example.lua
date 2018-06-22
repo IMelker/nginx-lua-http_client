@@ -39,19 +39,25 @@ end
 
 local http_input_key = "http_input"
 local http_query = { }
-http_query["method"] = "GET"
-http_query["uri"] = "https://yandex.ru/search/xml?user=test-yandex&key=09.31114:e650g7j&query=yandex"
-http_query["headers"] = ""
-http_query["body"] = ""
+http_query["method"] = 'GET'
+http_query["host"] = '188.94.228.58'
+http_query["port"] = '80'
+http_query["path"] = 'get'
+http_query["query"] = ''
+http_query["headers"] = ''
+http_query["body"] = ''
 local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
 
 local http_output_key = "http_output"
 local encoded_http_output = R:blpop(http_output_key, 60)
-if encoded_http_output ~= ngx.null then
+if encoded_http_output ~= nil then
     local http_query = DecodeDictonary(encoded_http_output[2])
     print("--------------------")
     print(http_query["method"])
-    print(http_query["uri"])
+    print(http_query["host"]) 
+    print(http_query["port"])
+    print(http_query["path"])
+    print(http_query["query"])
     print(http_query["headers"])
     print(http_query["body"])
     print("")
