@@ -17,19 +17,20 @@ if ngx.worker.id() ~= nil then
                 goto continue
             end
             
-            local test_redis_key = "test:" .. to_string(ngx.worker.id())
-            
-            local ok, error = R:set(test_redis_key, to_string(ngx.time()))
-            if not ok then
-                ngx.log(ngx.ERR, "failed to write down to redis: ", error)
-                goto continue
-            end
-            
-            local text, error = R:get(test_redis_key)
-            if text and (type(text) == 'string') then
-                ngx.log(ngx.INFO, "Readed form Redis: [", text, "]")
-            end
-
+            do 
+                local test_redis_key = "test:" .. to_string(ngx.worker.id())
+                
+                local ok, error = R:set(test_redis_key, to_string(ngx.time()))
+                if not ok then
+                    ngx.log(ngx.ERR, "failed to write down to redis: ", error)
+                    goto continue
+                end
+                
+                local text, error = R:get(test_redis_key)
+                if text and (type(text) == 'string') then
+                    ngx.log(ngx.INFO, "Readed form Redis: [", text, "]")
+                end
+            end 
             -- redis init
             -- start loop with blpop
                 -- in loop get all params and send request
