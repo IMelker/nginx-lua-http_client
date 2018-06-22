@@ -31,8 +31,8 @@ end
 --------------------------------------------------------------------------------
 local redis = require "redis"
 
-local ok = redis:connect("unix:/var/run/redis/redis.sock")
-if not ok then
+local R = redis:connect("unix:/var/run/redis/redis.sock")
+if not R then
     print("Failed to connect to Redis. ")
     return
 end
@@ -43,10 +43,10 @@ http_query["method"] = "GET"
 http_query["uri"] = "https://yandex.ru/search/xml?user=test-yandex&key=09.31114:e650g7j&query=yandex"
 http_query["headers"] = ""
 http_query["body"] = ""
-local ok = redis:lpush(http_input_key, EncodeDictonary(http_query))
+local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
 
 local http_output_key = "http_output"
-local encoded_http_output = redis:blpop(http_output_key, 60)
+local encoded_http_output = R:blpop(http_output_key, 60)
 if encoded_http_output ~= ngx.null then
     local http_query = DecodeDictonary(encoded_http_output[2])
     print("--------------------")
