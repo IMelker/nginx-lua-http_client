@@ -44,7 +44,7 @@ end
 
 if ngx.worker.id() ~= nil then
     ngx .log(ngx.INFO, "START [", ngx.worker.id(),"] time [", ngx.time(), "]")
-    local delay = 5
+    local delay = 0
     local timer = ngx.timer.at
     local check
     
@@ -58,7 +58,7 @@ if ngx.worker.id() ~= nil then
             local ok, error = R:connect("unix:/var/run/redis/redis.sock")
             if not ok then
                 ngx.log(ngx.ERR, "failed to connect to redis: ", error)
-                goto continue
+                return
             end
 
             while ok do 
@@ -100,7 +100,7 @@ if ngx.worker.id() ~= nil then
                 R:set_keepalive(10000, 1024)
             end 
 
-            ::continue::
+            --::continue::
             local tm_ok, tm_error = timer(delay, check)
             if not tm_ok then
                 ngx.log(ngx.ERR, "failed to create timer: ", tm_error)
