@@ -54,23 +54,26 @@ if ngx.worker.id() ~= nil then
             local http = require "resty.http"
             local R = redis:new()
             local httpc = http.new()
+	    local working = true;
             
-            local ok, error = R:connect("unix:/var/run/redis/redis.sock")
+	    local ok, error = R:connect("unix:/var/run/redis/redis.sock")
             if not ok then
                 ngx.log(ngx.ERR, "failed to connect to redis: ", error)
-                return
-            end
-
-            while ok do 
-                local http_input_key = "http_input"
-                local encoded_http_input, error = R:blpop(http_input_key, 60)
-                if encoded_http_input ~= nil and encoded_http_input[2] ~= nil then
+                working = false
+	    end
+	
+	    local http_input_key = "http_input"
+		
+            while working do 
+                local encoded_http_input, error = R:blpop(http_input_key, 50)
+                if encoded_http_input and (type(encoded_http_input) == 'table') and 
+		                          (type(encoded_http_input[2]) == 'string') then
                     local http_query = DecodeDictonary(encoded_http_input[2])
                     
-                    ngx.log(ngx.INFO, "[METHOD] = ", http_query["method"])
-                    ngx.log(ngx.INFO, "[URL] = ", http_query["url"])
-                    ngx.log(ngx.INFO, "[HEADERS] = ", http_query["headers"])
-                    ngx.log(ngx.INFO, "[BODY] = ",  http_query["body"])
+                    --ngx.log(ngx.INFO, "[METHOD] = ", http_query["method"])
+                    --ngx.log(ngx.INFO, "[URL] = ", http_query["url"])
+                    --ngx.log(ngx.INFO, "[HEADERS] = ", http_query["headers"])
+                    --ngx.log(ngx.INFO, "[BODY] = ",  http_query["body"])
                     
                     local httpc_res, httpc_error = httpc:request_uri(http_query["url"], {
                         method = http_query["method"],
@@ -78,29 +81,34 @@ if ngx.worker.id() ~= nil then
                         headers = http_query["headers"]:ToHeadersTable()
                     })
 
-                    if not httpc_res then
-                        ngx.log(ngx.INFO, "Failed to request: ", httpc_error)
-                        return
-                    end
+                    if httpc_res ~= nil then
+                        --ngx.log(ngx.INFO, httpc_res.status)
+                        --ngx.log(ngx.INFO, httpc_res.headers:ToHeadersString())
+                        httpc_res:read_body();
+		        --ngx.log(ngx.INFO, httpc_res.body)
                     
-                    ngx.log(ngx.INFO, httpc_res.status)
-                    --ngx.log(ngx.INFO, httpc_res.headers:ToHeadersString())
-                    ngx.log(ngx.INFO, httpc_res:read_body())
-                    
-                    local http_output_key = "http_output"
-                    http_query["res_status"] = httpc_res.status
-                    http_query["res_headers"] = "" --httpc_res.headers:ToHeadersString()
-                    http_query["res_body"] = httpc_res:read_body()
-                    local res_redis_res, res_redis_err = R:lpush(http_output_key, EncodeDictonary(http_query))
-                    if (not res_redis_res) then
-                        ngx.log(ngx.ERR, "Failed to write down response data to redis: ", res_redis_err)
+                        local http_output_key = "http_output"
+                        http_query["res_status"] = httpc_res.status
+                        http_query["res_headers"] = "" --httpc_res.headers:ToHeadersString()
+                        http_query["res_body"] = httpc_res.body
+                        local res_redis_res, res_redis_err = R:lpush(http_output_key, EncodeDictonary(http_query))
+                        if (not res_redis_res) then
+                            ngx.log(ngx.ERR, "Failed to write down response data to redis: ", res_redis_err)
+                            working = false
+		        end	    
+                    else 
+			ngx.log(ngx.INFO, "Failed to request: ", httpc_error)
                     end
-                end
-                httpc:set_keepalive()
-                R:set_keepalive(10000, 1024)
+	        else
+		    ngx.log(ngx.INFO, "Redis blpop error: ", error)
+	            local ok, error = R:connect("unix:/var/run/redis/redis.sock")
+                    if not ok then
+                        ngx.log(ngx.ERR, "failed to connect to redis: ", error)
+                        working = false
+	            end
+	        end
             end 
 
-            --::continue::
             local tm_ok, tm_error = timer(delay, check)
             if not tm_ok then
                 ngx.log(ngx.ERR, "failed to create timer: ", tm_error)

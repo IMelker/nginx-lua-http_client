@@ -41,25 +41,26 @@ end
 local http_input_key = "http_input"
 local http_query = { }
 http_query["method"] = 'GET'
-http_query["url"] = 'http://httpbin.org/get?text=kill'
+http_query["url"] = 'http://188.94.228.58:80/get'
 http_query["headers"] = ''
 http_query["body"] = ''
 
-local start_time = os.clock()
-print(start_time)
-
-while true do --for i=1,100000 do
-  --local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
+for i=1,1000000 do
+  local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
   local http_output_key = "http_output"
   local encoded_http_output = R:blpop(http_output_key, 60)
   if encoded_http_output ~= nil then
     local http_response = DecodeDictonary(encoded_http_output[2])
-    io.write(http_response["res_status"],"\r")
-    io.flush();
+    --print("--------------------")
+    --print(http_query["method"])
+    --print(http_query["url"]) 
+    --print(http_query["headers"])
+    --print(http_query["body"])
+    --print("")
+    print(http_response["res_status"])
+    --print(http_query["res_headers"])
+    --print(http_query["res_body"])
+    -- print("--------------------")
   end
-  --io.write(i,"\r");
-  --io.flush();
 end
-
-print(string.format("elapsed time: %.2f\n", os.clock() - start_time))
 --------------------------------------------------------------------------------
