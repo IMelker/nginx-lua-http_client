@@ -48,17 +48,15 @@ http_query["body"] = ''
 local start_time = os.clock()
 print(start_time)
 
-while true do --for i=1,100000 do
-  --local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
+for i=1,1000000 do
+  local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
   local http_output_key = "http_output"
   local encoded_http_output = R:blpop(http_output_key, 60)
   if encoded_http_output ~= nil then
-    local http_response = DecodeDictonary(encoded_http_output[2])
-    io.write(http_response["res_status"],"\r")
-    io.flush();
+      local http_response = DecodeDictonary(encoded_http_output[2])
+      io.write(http_response["res_status"] .. " - " , i,"\r");
+      io.flush();
   end
-  --io.write(i,"\r");
-  --io.flush();
 end
 
 print(string.format("elapsed time: %.2f\n", os.clock() - start_time))
