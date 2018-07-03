@@ -33,15 +33,38 @@ local function DecodeDictonary(str)
 end
 --------------------------------------------------------------------------------
 function string:ToHeadersTable()
-  local outResults = { }
-  
-  return outResults
+  local result = { }
+  local pairPtrn = "=\""
+  local pairEndPtrn = "\""
+  local theStart = 1
+  local pairStart, pairEnd = string.find(self, pairPtrn, theStart)
+  while pairStart do
+    local pairEndStart, pairEndEnd = string.find(self, pairEndPtrn, pairEnd + 1)
+    local key = string.sub(self, theStart, pairStart - 1)
+    local value = string.sub(self, pairEnd + 1, pairEndStart - 1)
+    result[key] = value
+    theStart = pairEndEnd + 2 -- 2 because of , after "
+    pairStart, pairEnd = string.find(self, pairPtrn, theStart)
+  end
+  return result
 end
 
 function table:ToHeadersString()
-  local outResults = ""
-
-  return outResults
+  local result = ""
+  for k, v in pairs(table) do
+    if type(k) == "string" then
+      result = result .. k .. "="
+    end
+    if type(v) == "string" then
+      result = result .. "\"" .. v .. "\""
+    end
+    result = result..","
+  end
+  -- Remove leading commas from the result
+  if result ~= "" then
+    result = result:sub(1, result:len()-1)
+  end
+  return result
 end
 --------------------------------------------------------------------------------
 
