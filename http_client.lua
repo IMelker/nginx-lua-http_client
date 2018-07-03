@@ -97,24 +97,17 @@ if ngx.worker.id() ~= nil then
 		    if (type(encoded_http_input) == 'table') and 
 		       (type(encoded_http_input[2]) == 'string') then
                         local http_query = DecodeDictonary(encoded_http_input[2])
-			ngx.log(ngx.ERR, http_query["headers"])
                         local httpc_res, httpc_error = httpc:request_uri(http_query["url"], {
                             method = http_query["method"],
                             body = http_query["body"],
                             headers = ToHeadersTable(http_query["headers"])
                         })
 
-			local t_headers = ToHeadersTable(http_query["headers"])
-			for k, v in pairs(t_headers) do 
-			    ngx.log(ngx.ERR, "HEADERS VALUE [", k, ']=', v)
-			end
-
                         if httpc_res ~= nil then
                             httpc_res:read_body();                   
                             local http_output_key = "http_output"
                             http_query["res_status"] = httpc_res.status
                             http_query["res_headers"] = ToHeadersString(httpc_res.headers)
-                            ngx.log(ngx.ERR, "RESPONSE HEADERS = ", http_query["res_headers"])
 			    http_query["res_body"] = httpc_res.body
                             local lpush_resp, lpush_err = R:lpush(http_output_key, EncodeDictonary(http_query))
                             if not lpush_resp then

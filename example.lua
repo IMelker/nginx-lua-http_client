@@ -64,10 +64,10 @@ headers["Content-Type"] = "text/html; charset=UTF-8"
 headers["Server"] = "Apache/2.0.45 (Unix) mod_ssl/2.0.45 OpenSSL/0.9.6b"
 headers["Connection"] = "close"
 http_query["headers"] = ToHeadersString(headers)
-http_query["body"] = ''
+http_query["body"] = 'Test body'
 
 local start_time = os.clock()
-print(start_time)
+print("START TIME: ", start_time)
 
 local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
 local http_output_key = "http_output"
@@ -79,6 +79,5 @@ if encoded_http_output ~= nil then
     print("STATUS = [", http_response["res_status"], "]")
 end
 
-
-print(string.format("elapsed time: %.2f\n", os.clock() - start_time))
+print("END TIME: ", os.clock() - start_time)
 --------------------------------------------------------------------------------
