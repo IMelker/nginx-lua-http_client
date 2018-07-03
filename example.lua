@@ -28,6 +28,23 @@ local function DecodeDictonary(str)
   return message
 end
 --------------------------------------------------------------------------------
+function table:ToHeadersString()
+  local result = ""
+  for k, v in pairs(table) do
+    if type(k) == "string" then
+      result = result .. k .. "="
+    end
+    if type(v) == "string" then
+      result = result .. "\"" .. v .. "\""
+    end
+    result = result..","
+  end
+  -- Remove leading commas from the result
+  if result ~= "" then
+    result = result:sub(1, result:len()-1)
+  end
+  return result
+end
 --------------------------------------------------------------------------------
 local redis = require "redis"
 
@@ -42,7 +59,10 @@ local http_input_key = "http_input"
 local http_query = { }
 http_query["method"] = 'GET'
 http_query["url"] = 'http://httpbin.org/get?text=kill'
-http_query["headers"] = ''
+local headers = { }
+headers["Content-Type"] = "text/html"
+headers["Host"] = "127.0.0.1"
+http_query["headers"] = headers:ToHeadersString()
 http_query["body"] = ''
 
 local start_time = os.clock()
