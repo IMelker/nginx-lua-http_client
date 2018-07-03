@@ -28,9 +28,9 @@ local function DecodeDictonary(str)
   return message
 end
 --------------------------------------------------------------------------------
-function table:ToHeadersString()
+function ToHeadersString(headers_table)
   local result = ""
-  for k, v in pairs(table) do
+  for k, v in pairs(headers_table) do
     if type(k) == "string" then
       result = result .. k .. "="
     end
@@ -60,24 +60,25 @@ local http_query = { }
 http_query["method"] = 'GET'
 http_query["url"] = 'http://httpbin.org/get?text=kill'
 local headers = { }
-headers["Content-Type"] = "text/html"
-headers["Host"] = "127.0.0.1"
-http_query["headers"] = headers:ToHeadersString()
+headers["Content-Type"] = "text/html; charset=UTF-8"
+headers["Server"] = "Apache/2.0.45 (Unix) mod_ssl/2.0.45 OpenSSL/0.9.6b"
+headers["Connection"] = "close"
+http_query["headers"] = ToHeadersString(headers)
 http_query["body"] = ''
 
 local start_time = os.clock()
 print(start_time)
 
-for i=1,1000000 do
-  local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
-  local http_output_key = "http_output"
-  local encoded_http_output = R:blpop(http_output_key, 60)
-  if encoded_http_output ~= nil then
-      local http_response = DecodeDictonary(encoded_http_output[2])
-      io.write(http_response["res_status"] .. " - " , i,"\r");
-      io.flush();
-  end
+local ok = R:lpush(http_input_key, EncodeDictonary(http_query))
+local http_output_key = "http_output"
+local encoded_http_output = R:blpop(http_output_key, 60)
+if encoded_http_output ~= nil then
+    local http_response = DecodeDictonary(encoded_http_output[2])
+    print("BODY = [", http_response["res_body"] ,"]")
+    print("HEADERS = [", http_response["res_headers"], "]")
+    print("STATUS = [", http_response["res_status"], "]")
 end
+
 
 print(string.format("elapsed time: %.2f\n", os.clock() - start_time))
 --------------------------------------------------------------------------------
