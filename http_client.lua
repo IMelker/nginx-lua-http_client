@@ -107,7 +107,7 @@ if ngx.worker.id() ~= nil then
                             httpc_res:read_body();                   
                             local http_output_key = "http_output"
                             http_query["res_status"] = httpc_res.status
-                            http_query["res_headers"] = "" --httpc_res.headers:ToHeadersString()
+                            http_query["res_headers"] = httpc_res.headers:ToHeadersString()
                             http_query["res_body"] = httpc_res.body
                             local lpush_resp, lpush_err = R:lpush(http_output_key, EncodeDictonary(http_query))
                             if not lpush_resp then
