@@ -1,4 +1,4 @@
-# NGINX Lua HTTP Cleint
+# NGINX Lua HTTP Client
 `NGINX HTTP Client` based on `nginx-lua-module`, `resty.http` and `resty.redis`. Starting with `init_worker_by_lua` and timer hack.
 It's synchronous. Workspeed can be increased by changing number of NGINX workers in `nginx.conf`.
 
